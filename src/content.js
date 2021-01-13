@@ -129,8 +129,14 @@ function appendAESR() {
 
 if (document.body) {
   adjustDisplayNameColor();
-  adjustNavigationControlsColor();
   appendAESR();
+
+  chrome.storage.sync.get(['changeNavControlsColor'], function(data) {
+    const changeNavControlsColor = data.changeNavControlsColor || false;
+    if (changeNavControlsColor) {
+      adjustNavigationControlsColor();
+    }
+  });
 }
 
 (chrome || browser).runtime.onMessage.addListener(function(msg, sender, cb) {
