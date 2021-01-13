@@ -1,4 +1,4 @@
-function needsInvertForeColorByBack(color) {
+function parseCssColor(color) {
   let r, g, b;
   const md = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
   if (md) {
@@ -10,14 +10,24 @@ function needsInvertForeColorByBack(color) {
     g = parseInt(color.substr(2, 2), 16);
     b = parseInt(color.substr(4, 2), 16);
   }
+  return { r, g, b };
+}
+
+function needsInvertForeColorByBack(color) {
+  const { r, g, b } = parseCssColor(color);
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
 }
 
-function adjustDisplayNameColor() {
+function getMenuButton() {
   let menuBtn = document.querySelector('span[data-testid="account-menu-button__background"]');
   if (!menuBtn) {
     menuBtn = document.querySelector('#nav-usernameMenu .awsc-switched-role-username-wrapper');
   }
+  return menuBtn;
+}
+
+function adjustDisplayNameColor() {
+  const menuBtn = getMenuButton();
   if (menuBtn) {
     const bgColor = menuBtn.style.backgroundColor;
     if (bgColor && needsInvertForeColorByBack(bgColor)) {
@@ -25,6 +35,70 @@ function adjustDisplayNameColor() {
     }
   }
 }
+
+function adjustNavigationControlsColor() {
+  const menuBtn = getMenuButton();
+  if (!menuBtn) return;
+
+  const baseColor = menuBtn.style.backgroundColor;
+
+  const createOverlay = (options = {}) => {
+    const defaults = { top:0, left:0, bottom: 0, right: 0, important: false };
+    const important =(options.important || defaults.important) ? 'important' : null;
+    const overlay = document.createElement('div');
+    overlay.style.setProperty('position', 'absolute', important);
+    overlay.style.setProperty('top', `${options.top || defaults.top}px`, important);
+    overlay.style.setProperty('left', `${options.left || defaults.left}px`, important);
+    overlay.style.setProperty('right', `${options.right || defaults.right}px`, important);
+    overlay.style.setProperty('bottom', `${options.bottom || defaults.bottom}px`, important);
+    overlay.style.setProperty('mix-blend-mode', 'color', important);
+    overlay.style.setProperty('touch-action', 'none', important);
+    overlay.style.setProperty('pointer-events', 'none', important);
+    overlay.style.setProperty('background-color', baseColor, important);
+    return overlay;
+  }
+
+  const applyOverlay = (selectorOrElement, options = {}) => {
+    const e = (typeof(selectorOrElement) === 'string')
+      ? document.querySelector(selectorOrElement)
+      : selectorOrElement;
+    if (e) {
+      e.prepend(createOverlay(options))
+    }
+  };
+
+  const insertAfter = (newNode, refNode) => {
+    if (refNode.nextSibling) {
+      refNode.parentElement.insertBefore(newNode, refNode.nextSibling);
+    } else {
+      refNode.parentElement.append(newNode);
+    }
+  };
+
+  // header
+  applyOverlay('div[data-testid="awsc-nav-header-viewport-shelf-inner"]', { bottom: -1 });
+
+  // footer
+  applyOverlay('div[data-testid="awsc-nav-footer"]', { top: -1 });
+
+  // search input on header
+  const searchInput = document.querySelector('input[data-testid="awsc-concierge-input-hint"]');
+  if (searchInput) {
+    insertAfter(createOverlay({ important: true }), searchInput)
+  }
+
+  setTimeout(() => {
+    // service menu
+    applyOverlay('div[data-testid="awsc-nav-service-menu"]');
+    // account menu
+    applyOverlay('div[data-testid="awsc-nav-account-menu-content"]');
+    // regions menu
+    applyOverlay('div[data-testid="awsc-nav-regions-menu-content"]');
+    // support menu
+    applyOverlay('div[data-testid="awsc-nav-support-menu-content"]');
+  }, 500);
+}
+
 
 function extractBackURL() {
   let swLink = document.querySelector('#menu--account *[data-testid="awsc-switch-roles"]');
@@ -55,6 +129,7 @@ function appendAESR() {
 
 if (document.body) {
   adjustDisplayNameColor();
+  adjustNavigationControlsColor();
   appendAESR();
 }
 
