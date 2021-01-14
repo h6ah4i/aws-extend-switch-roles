@@ -43,7 +43,7 @@ function adjustNavigationControlsColor() {
   const baseColor = menuBtn.style.backgroundColor;
 
   const createOverlay = (options = {}) => {
-    const defaults = { top:0, left:0, bottom: 0, right: 0, important: false };
+    const defaults = { top:0, left:0, bottom: 0, right: 0, important: false, zIndex: 0 };
     const important =(options.important || defaults.important) ? 'important' : null;
     const overlay = document.createElement('div');
     overlay.style.setProperty('position', 'absolute', important);
@@ -55,6 +55,7 @@ function adjustNavigationControlsColor() {
     overlay.style.setProperty('touch-action', 'none', important);
     overlay.style.setProperty('pointer-events', 'none', important);
     overlay.style.setProperty('background-color', baseColor, important);
+    overlay.style.setProperty('z-index', `${options.zIndex || defaults.zIndex}`, important);
     return overlay;
   }
 
@@ -89,13 +90,13 @@ function adjustNavigationControlsColor() {
 
   setTimeout(() => {
     // service menu
-    applyOverlay('div[data-testid="awsc-nav-service-menu"]');
+    applyOverlay('div[data-testid="awsc-nav-service-menu"]', { zIndex: -1 });
     // account menu
-    applyOverlay('div[data-testid="awsc-nav-account-menu-content"]');
+    applyOverlay('div[data-testid="awsc-nav-account-menu-content"]', { zIndex: -1 });
     // regions menu
-    applyOverlay('div[data-testid="awsc-nav-regions-menu-content"]');
+    applyOverlay('div[data-testid="awsc-nav-regions-menu-content"]', { zIndex: -1 });
     // support menu
-    applyOverlay('div[data-testid="awsc-nav-support-menu-content"]');
+    applyOverlay('div[data-testid="awsc-nav-support-menu-content"]', { zIndex: -1 });
   }, 500);
 }
 
